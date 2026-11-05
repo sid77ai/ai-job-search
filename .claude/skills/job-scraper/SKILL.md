@@ -5,7 +5,7 @@ description: >
   (LinkedIn, local job boards, and any skills added with /add-portal). Deduplicates
   across runs. Triggers on: job scrape, find jobs, search jobs, new jobs, job search,
   scrape jobs, /scrape
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), WebFetch, WebSearch, Agent, AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), mcp__Firecrawl__firecrawl_scrape, mcp__Firecrawl__firecrawl_find_tools, mcp__Firecrawl__firecrawl_search, WebFetch, WebSearch, Agent, AskUserQuestion
 ---
 
 # Job Scraper
@@ -53,7 +53,7 @@ Read `search-queries.md` (this directory) for the search strategy. By default, r
 bun --version
 ```
 
-If this fails (bun not installed), skip to **1c (WebSearch fallback)** for all portals and note the fallback in the Step 5 output.
+If this fails (bun not installed), skip the CLI portals and use **1c (WebSearch fallback)** for them, and note the fallback in the Step 5 output. MCP-backed portals (`backend: mcp`, see 1b) do not need bun and still run.
 
 #### 1b. Run CLI tools (primary — run these in parallel where possible)
 
@@ -72,6 +72,8 @@ For each **enabled** portal skill:
 Run all portal CLI calls in parallel where possible using the Agent tool. Collect all `results` arrays into a single pool for Step 2, keeping each result tagged with its source portal skill (for Step 2 `detail` lookups).
 
 If a CLI tool exits with a non-zero code, log the error message and continue — do not abort the whole search.
+
+**MCP-backed portals.** A portal whose `SKILL.md` frontmatter sets `backend: mcp` (e.g. `firecrawl-search`) has no CLI. Instead of `bun run`, call the MCP tools named in its `allowed-tools` exactly as its `SKILL.md` documents (same query translation, 14-day recency and ~20-result cap). If the connector's tools are not available in the session, or report that the user is not signed in, skip that portal, record it as `skipped (not connected)` for Step 5, and continue. These portals are useful in sandboxed/cloud sessions where the CLIs' direct HTTP requests are blocked; if a CLI fails with a network/proxy error and an MCP portal covers the same board, prefer the MCP portal over WebSearch.
 
 #### 1c. WebSearch fallback
 
@@ -156,8 +158,9 @@ specific person was found; these are search links, not results.
 
 Present new jobs in a table sorted by fit (high first). When Step 1b skipped
 portals (`enabled: false`), report them with the `skipped (disabled):` line below
-so opting one out stays visible rather than silent; omit the line when nothing
-was skipped.
+so opting one out stays visible rather than silent; likewise list MCP portals
+whose connector was unavailable with `skipped (not connected):`. Omit a line when
+nothing was skipped for that reason.
 
 ```
 ## New Job Matches - YYYY-MM-DD
@@ -165,6 +168,7 @@ was skipped.
 Found X new positions (Y high, Z medium, W low match).
 
 skipped (disabled): <portal-name>, <portal-name>
+skipped (not connected): <portal-name>
 
 | # | Fit | Title | Company | Location | Deadline | URL |
 |---|-----|-------|---------|----------|----------|-----|
@@ -198,7 +202,7 @@ If the user decides to apply to any job, add a row to `job_search_tracker.csv`.
 
 ## Important Rules
 
-1. **Never fabricate job postings.** Only present jobs from actual CLI search/detail output or WebSearch/WebFetch results.
+1. **Never fabricate job postings.** Only present jobs from actual CLI or MCP-portal search/detail output or WebSearch/WebFetch results.
 2. **Respect deduplication.** Always check seen_jobs.json AND job_search_tracker.csv before presenting.
 3. **Focus on configured geographic area.** Skip jobs that require relocation or are clearly outside commute range.
 4. **Only open positions.** Skip postings with expired deadlines or those marked as closed.
