@@ -20,8 +20,8 @@ Record fields (`jobs/search`): `job_key`, `title`, `employer{key,name,url}`,
 `reposted`, `expired`, `salary`, `snippet` (first 300 chars), `attributes[]`,
 `language`, `source_name`, `source_url`, `apply_url`.
 
-Live test (2026-11-05): `country: DE, query: "Director Supply Chain Transformation",
-location: "Düsseldorf", radius_miles: 50, posted_within_days: 30, limit: 5` returned
+Live test (2026-11-05): `country: DE`, a job-title `query`, a city `location`,
+`radius_miles: 50, posted_within_days: 30, limit: 5` returned
 5 records, `upstreamStatus: 200`, 5 credits.
 
 ## smartrecruiters-com

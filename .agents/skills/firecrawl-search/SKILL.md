@@ -87,11 +87,11 @@ Each record in `jobs[]` carries `job_key`, `title`, `employer.name`, `location`,
 `attributes` (skills, languages, workplace type), `source_url` (the Indeed posting)
 and `apply_url` (the employer's own page, when present).
 
-Example - Director-level supply-chain roles around Düsseldorf, last 14 days:
+Example - senior data-engineering roles around Berlin, last 14 days:
 
 ```json
 {"provider": "indeed-com", "capability": "jobs/search",
- "options": {"country": "DE", "query": "Director Supply Chain", "location": "Düsseldorf",
+ "options": {"country": "DE", "query": "Senior Data Engineer", "location": "Berlin",
              "radius_miles": 50, "posted_within_days": 14, "exclude_reposts": true, "limit": 20}}
 ```
 
@@ -131,9 +131,9 @@ and read a contract before the first use.
 1. Translate each query from `search-queries.md` into `indeed-com/jobs/search`
    options (`query` + `location` + `country`), scoped with `posted_within_days: 14`
    and `limit: 20`. Batch several queries into one `firecrawl_scrape` call (max 10).
-   Prefer `title` for job-title queries: in testing, a broad `query` such as
-   "Director Supply Chain" also returned sales-ops and account-manager roles, while
-   `title: "Head of Operational Excellence"` returned only matching titles.
+   Prefer `title` for job-title queries: in testing, a broad `query` also returned
+   loosely related roles (e.g. sales-ops and account-manager titles), while a
+   `title` filter returned only matching titles.
 2. Normalise each record to the common result shape: `title`, `company`
    (`employer.name`), `location` (`location.formatted`), `date` (`posted_at`),
    `url` (`source_url`), plus `apply_url` and `salary` when present. Keep the
